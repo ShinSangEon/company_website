@@ -1,24 +1,114 @@
 import "./App.css";
-import Navbar from "./Components/Navbar/Navbar";
-import Footer from "./Components/Footer/Footer";
-import { createBrowserRouter, RouterProvider, Outlet } from "react-router-dom";
-import MainPage from "./Pages/MainPage/MainPage";
-import About from "./Pages/About/About";
-import Leadership from "./Pages/Leadership/Leadership";
-import Board from "./Pages/Board/Board";
-import Services from "./Pages/Services/Services";
-import Contact from "./Pages/Contact/Contact";
 
+import Footer from "./Components/Footer/Footer";
+import Navbar from "./Components/Navbar/Navbar";
+import AdminNavbar from "./Components/AdminNavbar/AdminNavbar";
+import { useEffect, useState } from "react";
+import {
+  createBrowserRouter,
+  RouterProvider,
+  Outlet,
+  Navigate,
+} from "react-router-dom";
+import axios from "axios";
+
+import MainPage from "./Page/MainPage/MainPage";
+import About from "./Page/About/About";
+import Leadership from "./Page/Leadership/Leadership";
+import Board from "./Page/Board/Board";
+import Services from "./Page/Services/Services";
+import Contact from "./Page/Contact/Contact";
+import SinglePost from "./Page/SinglePost/SinglePost";
+
+
+import AdminLogin from "./Page/Admin/AdminLogin";
+import AdminPosts from "./Page/Admin/AdminPosts";
+import AdminCreatePost from "./Page/Admin/AdminCreatePost";
+import AdminEditPost from "./Page/Admin/AdminEditPost";
+import AdminContacts from "./Page/Admin/AdminContacts";
+
+import Kmong from "./Page/Kmong/Kmong";
+import Register from "./Page/Register/Register";
+
+
+function AuthRedirectRoute() {
+  const [isAuthenticated, setIsAuthenticated] = useState(null);
+
+  useEffect(() => {
+    const verifyToken = async () => {
+      try {
+        const response = await axios.post(
+          "http://localhost:3000/api/auth/verify-token",
+          {},
+          { withCredentials: true }
+        );
+        setIsAuthenticated(true);
+      } catch (error) {
+        console.log("토큰 인증 실패: ", error);
+        setIsAuthenticated(false);
+      }
+    };
+    verifyToken();
+  }, []);
+
+  if (isAuthenticated === null) {
+    return null;
+  }
+
+  return isAuthenticated ? <Navigate to="/admin/posts" replace /> : <Outlet />;
+}
+
+function ProtectedRoute() {
+  const [isAuthenticated, setIsAuthenticated] = useState(null);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const verifyToken = async () => {
+      try {
+        const response = await axios.post(
+          "http://localhost:3000/api/auth/verify-token",
+          {},
+          { withCredentials: true }
+        );
+        setIsAuthenticated(response.data.isValid);
+        setUser(response.data.user);
+      } catch (error) {
+        console.log("토큰 인증 실패: ", error);
+        setIsAuthenticated(false);
+        setUser(null);
+      }
+    };
+    verifyToken();
+  }, []);
+
+  if (isAuthenticated === null) {
+    return null;
+  }
+
+  return isAuthenticated ? (
+    <Outlet context={{ user }} />
+  ) : (
+    <Navigate to="/admin" replace />
+  );
+}
 
 function Layout() {
   return (
     <>
-    <Navbar />
-    <Outlet />
-    <Footer />
+      <Navbar />
+      <Outlet />
+      <Footer />
     </>
-  )
+  );
+}
 
+function AdminLayout() {
+  return (
+    <>
+      <AdminNavbar />
+      <Outlet />
+    </>
+  );
 }
 
 const router = createBrowserRouter([
@@ -28,7 +118,7 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <MainPage />
+        element: <MainPage />,
       },
       {
         path: "/about",
@@ -47,14 +137,59 @@ const router = createBrowserRouter([
         element: <Services />,
       },
       {
+        path: "/post/:id",
+        element: <SinglePost />,
+      },
+      {
         path: "/contact",
         element: <Contact />,
-      }
-    ]
-  }
-])
+      },
+      {
+        path: "/kmong",
+        element: <Kmong />,
+      },
+      {
+        path: "/register",
+        element: <Register />,
+      },
+    ],
+  },
+  {
+    path: "/admin",
+    element: <AuthRedirectRoute />,
+    children: [{ index: true, element: <AdminLogin /> }],
+  },
+  {
+    path: "/admin",
+    element: <ProtectedRoute />,
+    children: [
+      {
+        element: <AdminLayout />,
+        children: [
+          {
+            path: "posts",
+            element: <AdminPosts />,
+          },
+          {
+            path: "create-post",
+            element: <AdminCreatePost />,
+          },
+          {
+            path: "edit-post/:id",
+            element: <AdminEditPost />,
+          },
+          {
+            path: "contacts",
+            element: <AdminContacts />,
+          },
+        ],
+      },
+    ],
+  },
+]);
+
 function App() {
-  return <RouterProvider router={router} />
+  return <RouterProvider router={router} />;
 }
 
 export default App;

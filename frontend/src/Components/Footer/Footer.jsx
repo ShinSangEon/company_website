@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { FaFacebook, FaTwitter, FaInstagram, FaLinkedin } from "react-icons/fa";
+import footerLocale from "../../Locale/Footer.json"; // JSON 파일 불러오기
 
 const scrollToTop = () => {
   window.scrollTo({
@@ -10,90 +11,88 @@ const scrollToTop = () => {
 };
 
 const Footer = () => {
+  const [currentLanguage, setCurrentLanguage] = useState(
+    localStorage.getItem("language") || "ko"
+  );
+
+  useEffect(() => {
+    const handleLanguageChange = () => {
+      setCurrentLanguage(localStorage.getItem("language") || "ko");
+    };
+    window.addEventListener("languageChange", handleLanguageChange);
+    return () => {
+      window.removeEventListener("languageChange", handleLanguageChange);
+    };
+  }, []);
+
+  // JSON 데이터에서 텍스트 가져오는 함수
+  const getLocalizedText = (key) => {
+    const keys = key.split(".");
+    return (
+      keys.reduce((obj, k) => obj?.[k], footerLocale[currentLanguage]) || key
+    );
+  };
+
   return (
     <div>
       <footer className="bg-gray-900 text-gray-300">
         <div className="container mx-auto px-4 py-12">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            {/* 🔹 회사 소개 */}
             <div>
-              <h3 className="text-xl font-bold mb-4">회사 소개</h3>
+              <h3 className="text-xl font-bold mb-4">
+                {getLocalizedText("footer.company.title")}
+              </h3>
               <p className="text-gray-400">
-                저희회사는 최고의 서비를 제공하기 위해 노력합니다. 완전히
-                촬영잘합니다.
+                {getLocalizedText("footer.company.description")}
               </p>
             </div>
+
+            {/* 🔹 빠른 링크 */}
             <div>
-              <h3 className="text-xl font-bold mb-4">빠른 링크</h3>
+              <h3 className="text-xl font-bold mb-4">
+                {getLocalizedText("footer.quickLinks.title")}
+              </h3>
               <ul className="space-y-2">
-                <li>
-                  <Link
-                    to="/"
-                    onClick={scrollToTop}
-                    className="hover:text-white transition-colors"
-                  >
-                    홈
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/about"
-                    onClick={scrollToTop}
-                    className="hover:text-white transition-colors"
-                  >
-                    회사 정보
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/leadership"
-                    onClick={scrollToTop}
-                    className="hover:text-white transition-colors"
-                  >
-                    임원 소개
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/board"
-                    onClick={scrollToTop}
-                    className="hover:text-white transition-colors"
-                  >
-                    업무 게시판
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/our-services"
-                    onClick={scrollToTop}
-                    className="hover:text-white transition-colors"
-                  >
-                    제공 기술
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/contact"
-                    onClick={scrollToTop}
-                    className="hover:text-white transition-colors"
-                  >
-                    문의
-                  </Link>
-                </li>
+                {[
+                  "home",
+                  "about",
+                  "leadership",
+                  "board",
+                  "services",
+                  "contact",
+                ].map((key) => (
+                  <li key={key}>
+                    <Link
+                      to={`/${key}`}
+                      onClick={scrollToTop}
+                      className="hover:text-white transition-colors"
+                    >
+                      {getLocalizedText(`footer.quickLinks.${key}`)}
+                    </Link>
+                  </li>
+                ))}
               </ul>
             </div>
 
+            {/* 🔹 연락처 */}
             <div>
-              <h3 className="text-xl font-bold mb-4">연락처</h3>
+              <h3 className="text-xl font-bold mb-4">
+                {getLocalizedText("footer.contact.title")}
+              </h3>
               <ul className="space-y-2 text-gray-400">
-                <li>경상남도 진주시</li>
-                <li>호탄동 624-19 1층</li>
-                <li>대표 권오형 010-8553-0545</li>
-                <li>이메일: marumidi@naver.com</li>
+                <li>{getLocalizedText("footer.contact.address1")}</li>
+                <li>{getLocalizedText("footer.contact.address2")}</li>
+                <li>{getLocalizedText("footer.contact.phone")}</li>
+                <li>{getLocalizedText("footer.contact.email")}</li>
               </ul>
             </div>
 
+            {/* 🔹 소셜 미디어 */}
             <div>
-              <h3 className="text-xl font-bold mb-4">소셜 미디어</h3>
+              <h3 className="text-xl font-bold mb-4">
+                {getLocalizedText("footer.social.title")}
+              </h3>
               <div className="flex space-x-4">
                 <a
                   href="#"
@@ -123,8 +122,9 @@ const Footer = () => {
             </div>
           </div>
 
-          <div className="border-t borber-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2025 Maru company. All rights reseved</p>
+          {/* 🔹 저작권 표시 */}
+          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+            <p>{getLocalizedText("footer.copyright")}</p>
           </div>
         </div>
       </footer>
